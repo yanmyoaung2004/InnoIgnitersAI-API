@@ -7,7 +7,6 @@ import os
 import json
 from fastapi import  WebSocket
 from models.schemas import HistoryMessage
-from test import detect_file
 
 
 

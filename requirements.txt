@@ -1,0 +1,48 @@
+# FastAPI backend
+fastapi
+uvicorn[standard]
+python-multipart
+
+# CORS support
+starlette
+
+# Database
+SQLAlchemy
+databases[postgresql]
+psycopg2-binary
+
+# Environment
+python-dotenv
+
+# Pydantic for schemas
+pydantic
+
+# Authentication / security
+PyJWT
+passlib[bcrypt]
+
+# HTTP requests & APIs
+httpx
+requests
+
+# Logging / utilities
+loguru
+
+# Async / concurrency
+dspy
+concurrent.futures
+
+# AI / LLM toolkits
+groq
+
+# Optional: scheduling / background tasks
+APScheduler
+
+# Static files support
+python-magic
+
+# Image processing / file handling
+Pillow
+
+# Optional: regex / text processing
+regex
