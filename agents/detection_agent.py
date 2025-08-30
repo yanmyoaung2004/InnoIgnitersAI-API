@@ -20,10 +20,11 @@ class DetectionPlanner(dspy.Signature):
         query: The user input describing what to detect (URL(s), file(s)).
 
     Outputs:
-        tool_plan: Dict mapping execution steps to tool calls. Each call specifies:
+        tool_plan: Dict mapping execution steps to tool calls with functions and params. Each call specifies:
             - tool: 'DetectionTool'
-            - function: 'detect_url' or 'detect_file'
-            - params: dictionary of parameters
+            - function: 'detect_url: {"url": "..."}' or 'detect_file : {"file_path": "..."}', 'detect_mail:{"email_content":"..."}'
+            - Params dict must match the required parameters for the function.
+            - Steps are sequential; outputs from prior steps can inform later ones if needed, but the plan is generated upfront.   
     """
     query: str = dspy.InputField(desc="User query for detection")
     tool_plan: dict = dspy.OutputField(desc="Structured detection plan")
@@ -103,6 +104,7 @@ class DetectionAgent:
 
     async def plan_and_execute(self, query: str, reasoning_include: bool, ws: WebSocket, message: List[HistoryMessage] = []) -> Dict[int, List[Any]]:
         plan_output = self.planner(query=query)
+        print(plan_output)
         tool_plan = self._validate_plan(plan_output.tool_plan)        
         results: Dict[int, List[Any]] = {}
         for step in sorted(tool_plan.keys()):
@@ -145,7 +147,8 @@ class DetectionAgent:
         """
         def run(call):
             tool = self.tools.get(call['tool'])
-            func = getattr(tool, call['function'], None)
+            func_name = call['function'].split(":")[0].strip()
+            func = getattr(tool, func_name, None)
             if func is None:
                 return {"error": f"Unknown function {call['function']} on {call['tool']}"}
             try:
@@ -162,7 +165,7 @@ class DetectionAgent:
         return results
     
     async def detect_file(self,query: str, fileUrl : str, reasoning_include: bool,  ws: WebSocket, message: List[HistoryMessage] = []):
-        stats = self.tools['DetectionTool'].detect_file("./uploads/3ce81a9b1ab84c9180f274ebb7d2e37f.pdf")    
+        stats = self.tools['DetectionTool'].detect_file(fileUrl)    
         prompt = f"""
             You are a friendly cybersecurity advisor. A threat was scanned and produced the following results:
             

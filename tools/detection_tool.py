@@ -1,5 +1,7 @@
 import requests
 import os
+from agents.mail_detection_agent import SpamClassifier
+
 
 class DetectionTool:
     def __init__(self):
@@ -7,8 +9,32 @@ class DetectionTool:
         self.vt_api_key = os.environ.get('VIRUSTOTAL_API_KEY')
         if not self.vt_api_key:
             print("Warning: VIRUSTOTAL_API_KEY not set. Fallback model will be used.")
-        # self.fallback_model = FallbackMLModel()
-            
+        self.mail_detector = SpamClassifier()
+
+    def detect_mail(self, email_content):
+        pred_class, prob = self.mail_detector.predict(email_content)
+        if isinstance(prob, dict):
+            return {
+                "predicted_class": pred_class,
+                "probabilities": {
+                    "Not_Spam": round(prob.get("Not Spam", 0), 2),
+                    "Spam": round(prob.get("Spam", 0), 2)
+                }
+            }
+        if isinstance(prob, (float, int)):
+            prob = [1 - prob, prob]
+        if isinstance(prob, (list, tuple)) and len(prob) >= 2:
+            return {
+                "predicted_class": pred_class,
+                "probabilities": {
+                    "Not_Spam": round(prob[0] * 100, 2),
+                    "Spam": round(prob[1] * 100, 2)
+                }
+            }
+
+        return {"error": f"Unrecognized probability format: {prob}"}
+
+
     def detect_url(self, url):
         if not self.vt_api_key:
             pass
